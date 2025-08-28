@@ -1,6 +1,7 @@
 package com.yusa.librarymanagement.service.impl;
 
 import com.yusa.librarymanagement.dto.BorrowingRequestDto;
+
 import com.yusa.librarymanagement.model.Borrowing;
 
 import java.util.List;
@@ -13,4 +14,5 @@ public interface BorrowingServiceInterface {
     Borrowing returnBorrowing(long borrowingId);
     Borrowing getBorrowingById(long borrowingId);
     void deleteBorrowing(Long borrowingId);
+
 }

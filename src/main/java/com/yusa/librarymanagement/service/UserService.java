@@ -6,28 +6,36 @@ import com.yusa.librarymanagement.enums.Role;
 import com.yusa.librarymanagement.model.User;
 import com.yusa.librarymanagement.repository.UserRepository;
 
+import com.yusa.librarymanagement.security.JwtUtil;
 import com.yusa.librarymanagement.service.impl.UserServiceInterface;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.RequestBody;
 
 import java.util.List;
 
 @Service
+
 public class UserService implements UserServiceInterface {
     private final UserRepository userRepository;
+    private final JwtUtil jwtUtil;
 
-    public UserService(UserRepository userRepository) {
+    public UserService(UserRepository userRepository, JwtUtil jwtUtil) {
         this.userRepository = userRepository;
+        this.jwtUtil = jwtUtil;
     }
 
+    @Cacheable(value = "users")
     public List<User> getUsers(){
         return userRepository.findAll();
     }
 
+    @Cacheable(value = "users")
     public List<User> getUsersByName(String name){
         return userRepository.findByUserName(name);
     }
 
+    @CacheEvict(value = "users", allEntries = true)
     public User registerUser( UserRequestDto request){
         User user = new User();
         user.setUserName(request.getUserName());
@@ -41,24 +49,26 @@ public class UserService implements UserServiceInterface {
         return userRepository.findById(id).orElseThrow();
     }
 
+    @CacheEvict(value = "users",  allEntries = true)
     public User createUser(User user){
         return userRepository.save(user);
     }
 
+    @CacheEvict(value = "users",  allEntries = true)
     public void deleteUserById(Long id){
         User user = userRepository.findById(id).orElseThrow();
         userRepository.delete(user);
     }
 
     public String loginUser(LoginRequsetDto request) {
-        User user = userRepository.finUserByEmail(request.getEmail());
+        User user = userRepository.findUserByEmail(request.getEmail());
         if (user.getPassword().equals(request.getPassword())) {
-            return "success";
+            return jwtUtil.generateToken(request.getEmail());
         }
-        return "fail";
+        throw new IllegalStateException("Wrong email or password");
     }
 
     public User findUserByEmail(String email) {
-        return userRepository.finUserByEmail(email);
+        return userRepository.findUserByEmail(email);
     }
 }
